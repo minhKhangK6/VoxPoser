@@ -1,0 +1,382 @@
+[SCENE 01]
+
+VoxPoser is a framework for robotic manipulation that connects natural language with physical action.
+
+Imagine telling a robot, “Close the top drawer.”
+
+For a human, this is simple. For a robot, the instruction must become a physical plan.
+
+Which drawer should it use? Where should the gripper move? What should it avoid?
+
+Traditional robotics often solves these questions with task-specific programs.
+
+VoxPoser takes a different approach.
+
+It uses language and vision models to construct spatial objectives, then lets a motion planner turn those objectives into robot motion.
+
+This video follows that process from language to physical action.
+
+
+[SCENE 02]
+
+Language is meaningful to humans, but a motion planner needs geometry.
+
+For “Close the top drawer,” the robot needs to locate the drawer, identify where to interact, determine useful regions, and avoid dangerous ones.
+
+So language must be transformed into spatial information.
+
+The language model provides semantic reasoning.
+
+The robotics system then connects that reasoning to the three-dimensional scene.
+
+In short, language describes what should happen, while geometry tells the robot where and how to act.
+
+
+[SCENE 03]
+
+Now let us look at the VoxPoser pipeline.
+
+The system receives a language instruction and an RGB-D observation.
+
+The language model reasons about the instruction and generates code that can query visual information.
+
+A vision-language model grounds those concepts in the scene.
+
+The result is three-dimensional value maps.
+
+These maps are then given to a model-based motion planner.
+
+The LLM does not directly control the robot.
+
+
+[SCENE 04]
+
+How does language become an actual object in the scene?
+
+Suppose the instruction refers to the top drawer.
+
+The system must identify the relevant object or part.
+
+VoxPoser uses open-vocabulary visual understanding and segmentation to connect the language query with the observed image.
+
+RGB-D information then provides three-dimensional geometry.
+
+The instruction is now grounded in the physical scene, where the robot can actually act.
+
+
+[SCENE 05]
+
+A value map can be understood as a function that assigns a value to locations in three-dimensional space.
+
+For a position x, the value tells the planner how desirable that location is for a particular purpose.
+
+VoxPoser uses several kinds of maps.
+
+Affordance maps describe useful regions.
+
+Avoidance maps describe undesirable regions.
+
+Other maps can describe rotation, velocity, and gripper actions.
+
+So a value map is more than a colorful visualization.
+
+It is a mathematical representation that connects semantic reasoning with robot planning.
+
+
+[SCENE 06]
+
+Now we can compose these maps.
+
+Imagine a useful region near a drawer handle and an obstacle nearby.
+
+The affordance map tells the robot where acting is desirable.
+
+The avoidance map tells it where entering is dangerous.
+
+The planner combines these spatial objectives into a cost representation.
+
+Conceptually, we want a trajectory that reaches useful regions while avoiding costly ones.
+
+This is the key idea behind composable value maps.
+
+Different spatial functions can be combined and given to a common motion planner.
+
+
+[SCENE 07]
+
+Once the value maps are available, the robot still needs an actual trajectory.
+
+Imagine several candidate paths.
+
+One passes through an obstacle.
+
+Another is safe but unnecessarily expensive.
+
+A third path safely reaches the target while satisfying the spatial objective.
+
+VoxPoser uses model-based planning to search for a sequence of collision-free end-effector positions.
+
+The value maps provide the objective.
+
+The motion planner provides the trajectory.
+
+
+[SCENE 08]
+
+A manipulation trajectory is more than just XYZ position.
+
+The end-effector also has orientation.
+
+Depending on the task, we may care about velocity and whether the gripper is open or closed.
+
+VoxPoser represents these properties with different value maps.
+
+Position tells the robot where to move.
+
+Orientation tells it how the tool should face.
+
+Velocity describes motion characteristics.
+
+Gripper actions determine when the fingers should open or close.
+
+Together, these components turn a spatial plan into an executable manipulation action.
+
+
+[SCENE 09]
+
+Physical environments are not perfectly predictable.
+
+Objects may move, and contact may behave differently than expected.
+
+VoxPoser therefore uses closed-loop execution.
+
+The system observes the environment, plans, executes part of the action, and observes again.
+
+New visual information can then update the plan.
+
+The paper reports replanning at five hertz.
+
+This allows the robot to adapt instead of blindly following its first plan.
+
+
+[SCENE 10]
+
+VoxPoser is evaluated in both simulation and real-robot environments.
+
+The experiments test whether natural-language instructions can produce useful behavior across different tasks and objects.
+
+The framework supports free-form instructions and open-set objects rather than requiring a separate program for every command.
+
+This flexibility is important for Physical AI, where robots encounter situations that cannot all be manually scripted.
+
+
+[SCENE 11]
+
+One interesting capability is behavioral commonsense reasoning.
+
+Consider a table-setting task.
+
+If the user says, “I am left-handed,” that statement provides context that can influence how the table should be arranged.
+
+The language model can use that context to infer a different spatial preference.
+
+That decision can then be expressed through the same value-map and planning framework.
+
+
+[SCENE 12]
+
+VoxPoser can also respond to fine-grained language corrections.
+
+Imagine positioning a teapot lid and receiving the instruction, “You are off by one centimeter.”
+
+That small linguistic correction corresponds to a small physical correction.
+
+The system can reinterpret the instruction and update the spatial objective instead of requiring a new task-specific policy.
+
+This makes language a flexible interface even for precise physical adjustments.
+
+
+[SCENE 13]
+
+Another capability is multi-step visual reasoning.
+
+Consider the instruction to open a drawer precisely by half.
+
+The robot may not know the exact displacement model beforehand.
+
+It can open the drawer, observe how far the handle moved, use that measurement, and then act again to reach the desired midpoint.
+
+The task becomes a sequence of observation, measurement, action, and new observation.
+
+The system can therefore use interaction to obtain information that was not known at the beginning.
+
+
+[SCENE 14]
+
+Some physical interactions are difficult to model in advance.
+
+Contact, friction, and object motion can behave differently from a simple geometric prediction.
+
+VoxPoser also explores learning dynamics online from visual observations.
+
+The robot can observe how an object reacts during interaction and use that information to improve later planning.
+
+The robot does not necessarily need a perfect dynamics model before acting.
+
+
+[SCENE 15]
+
+So what is the main contribution of VoxPoser?
+
+It is not simply an LLM connected to a robot.
+
+The key bridge combines language and vision reasoning, three-dimensional value maps, and model-based planning.
+
+First, the system interprets language.
+
+Second, it converts that interpretation into spatial objectives.
+
+Third, it uses those objectives to synthesize motion.
+
+These value maps connect semantic reasoning with physical planning.
+
+
+[SCENE 16]
+
+The whole framework can be summarized as a chain.
+
+Language describes the desired behavior.
+
+Language and vision models interpret that behavior in the current scene.
+
+Value maps describe useful and undesirable regions and other action properties.
+
+A motion planner converts those objectives into a trajectory.
+
+The robot then executes while continuing to observe its environment.
+
+This is how high-level reasoning interacts with physical robot control.
+
+
+[SCENE 17]
+
+The experiments also provide quantitative evidence.
+
+In the real-world evaluation, VoxPoser achieved about eighty-eight percent success in static settings and about seventy percent under disturbances.
+
+The action-primitives baseline performed much worse, including zero percent under disturbances.
+
+This matters because physical robots must deal with changing environments.
+
+Closed-loop language-driven planning is therefore not only flexible, but also more robust during execution.
+
+
+[SCENE 18]
+
+The authors evaluate VoxPoser in simulation as well as on real robots.
+
+Simulation allows many tasks and conditions to be tested systematically, including seen and unseen settings.
+
+Real-robot experiments provide a different test.
+
+They expose the system to real sensors, physical contact, and execution uncertainty.
+
+Together, these experiments test both generalization and physical execution.
+
+
+[SCENE 19]
+
+VoxPoser does not eliminate every failure mode.
+
+The pipeline still depends on several components working correctly.
+
+A perception error can produce incorrect grounding.
+
+Incorrect grounding can produce a bad value map.
+
+A bad value map can produce an undesirable trajectory.
+
+Language ambiguity and unpredictable contact can also cause failures.
+
+So VoxPoser reduces task-specific engineering, but it does not make robotics completely automatic.
+
+
+[SCENE 20]
+
+Let us run through the complete pipeline once more.
+
+A user provides a language instruction.
+
+The language model interprets it and generates a spatial program.
+
+Visual understanding grounds the relevant concepts in the current scene.
+
+The system constructs composable value maps.
+
+Those maps encode affordance, avoidance, orientation, velocity, and gripper information.
+
+The motion planner converts them into a trajectory.
+
+The robot executes the action and continues to observe the environment.
+
+This cycle connects language reasoning with physical behavior.
+
+
+[SCENE 21]
+
+Why is this interesting for Physical AI?
+
+The system connects reasoning about the world with acting in the world.
+
+Language provides a flexible way to express goals.
+
+Three-dimensional value maps connect those goals to spatial structure.
+
+Motion planning converts that structure into physical behavior.
+
+The key insight is that language reasoning can become a mathematical objective that a robotics system can optimize.
+
+
+[SCENE 22]
+
+The language model does not need to invent a complete robot controller from scratch.
+
+Instead, it can work with functional primitives.
+
+For example, the program can parse the query object, request affordance maps, request avoidance maps, compose the maps, and then plan a trajectory.
+
+The language model acts as a high-level program synthesizer.
+
+The robotics framework provides the actual operations.
+
+
+[SCENE 23]
+
+Zero-shot does not mean zero computation.
+
+The system still performs visual grounding, value-map construction, optimization, and control.
+
+Here, zero-shot means that new instructions or objects can be handled without task-specific additional training.
+
+A new command can produce a new spatial program.
+
+The planner can then synthesize a new trajectory.
+
+The system generates solutions at inference time instead of relying on a separately trained policy for every task.
+
+
+[SCENE 24]
+
+We can now summarize VoxPoser in one idea.
+
+Language tells us what should happen.
+
+Spatial reasoning determines where the relevant regions are.
+
+Composable value maps represent those objectives in three-dimensional space.
+
+Motion planning turns them into a physical trajectory.
+
+Closed-loop observation lets the robot adapt when the world changes.
+
+That is the bridge VoxPoser builds between language reasoning and physical robot action.
