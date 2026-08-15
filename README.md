@@ -73,6 +73,10 @@ Recommended clean repository:
 ```text
 VoxPoser/
 ├── README.md
+│   ├── narration.txt
+|   ├──VoxPoser_Full.mp4
+|   └──VoxPoser_Voice.mp3
+|
 │
 ├── scenes/
 │   ├── scene1_intro.py
@@ -106,18 +110,18 @@ VoxPoser/
 │   ├── make_voice.py
 │   ├── make_audio.py
 │   ├── make_synced_audio.py
-│   ├── finalize_video.py
-|   ├──VoxPoser_Full.mp4
-|   └──VoxPoser_Voice.mp3
+│   └──finalize_video.py
 │
-├── docs/
-│   ├── narration.txt
-│   ├── caption.srt
-│   ├── caption.txt
-│   └── caption.docx
+├── media/
+│   └── ...
+|
+├── voice/
+│   └── ...
 │
 product/
-    └──VoxPoser_Final.mp4
+│   ├── caption.srt
+│   └── caption.docx
+|   └──VoxPoser_Final.mp4
 ```
 
 The exact folder structure can be simplified if preferred, but keeping scenes, build scripts, and submission documents separated makes the repository easier to understand.
@@ -241,6 +245,8 @@ They can be regenerated from the source and scripts.
 - `make_synced_audio.py`
 - `finalize_video.py`
 - `narration.txt`
+- `media/`
+- `voice/`
 - `caption.srt`
 - `caption.txt`
 - `caption.docx`
@@ -252,8 +258,6 @@ They can be regenerated from the source and scripts.
 
 ### Do Not Commit
 
-- `media/`
-- `voice/`
 - partial Manim movie files
 - `concat_list.txt`
 - `voice_concat.txt`

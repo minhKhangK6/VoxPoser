@@ -10,6 +10,7 @@ class VoxPoserScene18(Scene):
         PURPLE = "#AF7AC5"
         ORANGE = "#F5B041"
         GRAY = "#BFC9CA"
+        WHITE_C = "#FFFFFF"
 
         # ============================================================
         # TITLE
@@ -19,9 +20,15 @@ class VoxPoserScene18(Scene):
             "Simulation and Real-World Evaluation",
             font_size=36,
             color=BLUE
-        ).to_edge(UP, buff=0.45)
+        ).to_edge(
+            UP,
+            buff=0.45
+        )
 
-        self.play(Write(title))
+        self.play(
+            Write(title)
+        )
+
         self.wait(1)
 
         # ============================================================
@@ -31,9 +38,13 @@ class VoxPoserScene18(Scene):
         sim = RoundedRectangle(
             width=5.0,
             height=4.0,
+            corner_radius=0.18,
             color=PURPLE,
-            fill_opacity=0.08
-        ).move_to(LEFT * 3)
+            fill_opacity=0.08,
+            stroke_width=2
+        ).move_to(
+            LEFT * 3.0
+        )
 
         sim_title = Text(
             "Simulation",
@@ -44,11 +55,26 @@ class VoxPoserScene18(Scene):
         )
 
         sim_points = VGroup(
-            Text("many tasks", font_size=24),
-            Text("seen instructions", font_size=24),
-            Text("unseen instructions", font_size=24),
-            Text("seen / unseen attributes", font_size=24),
-            Text("repeatable evaluation", font_size=24)
+            Text(
+                "many tasks",
+                font_size=24
+            ),
+            Text(
+                "seen instructions",
+                font_size=24
+            ),
+            Text(
+                "unseen instructions",
+                font_size=24
+            ),
+            Text(
+                "seen / unseen attributes",
+                font_size=24
+            ),
+            Text(
+                "repeatable evaluation",
+                font_size=24
+            )
         ).arrange(
             DOWN,
             buff=0.22
@@ -72,9 +98,13 @@ class VoxPoserScene18(Scene):
         real = RoundedRectangle(
             width=5.0,
             height=4.0,
+            corner_radius=0.18,
             color=GREEN,
-            fill_opacity=0.08
-        ).move_to(RIGHT * 3)
+            fill_opacity=0.08,
+            stroke_width=2
+        ).move_to(
+            RIGHT * 3.0
+        )
 
         real_title = Text(
             "Real robot",
@@ -85,11 +115,26 @@ class VoxPoserScene18(Scene):
         )
 
         real_points = VGroup(
-            Text("actual RGB-D input", font_size=24),
-            Text("real manipulation", font_size=24),
-            Text("moving obstacles", font_size=24),
-            Text("contact interactions", font_size=24),
-            Text("online replanning", font_size=24)
+            Text(
+                "actual RGB-D input",
+                font_size=24
+            ),
+            Text(
+                "real manipulation",
+                font_size=24
+            ),
+            Text(
+                "moving obstacles",
+                font_size=24
+            ),
+            Text(
+                "contact interactions",
+                font_size=24
+            ),
+            Text(
+                "online replanning",
+                font_size=24
+            )
         ).arrange(
             DOWN,
             buff=0.22
@@ -110,26 +155,28 @@ class VoxPoserScene18(Scene):
         # BRIDGE
         # ============================================================
 
+        # Keep the arrow completely inside the gap between the panels.
         bridge = Arrow(
-            sim.get_right(),
-            real.get_left(),
+            sim.get_right() + RIGHT * 0.18,
+            real.get_left() + LEFT * 0.18,
             color=YELLOW,
-            stroke_width=5
+            stroke_width=4,
+            max_tip_length_to_length_ratio=0.16,
+            buff=0.05
         )
 
+        # Put the label above the arrow with generous spacing.
         bridge_text = Text(
             "same core idea",
-            font_size=22,
+            font_size=21,
             color=YELLOW
-        ).next_to(
-            bridge,
-            UP,
-            buff=0.15
+        ).move_to(
+            bridge.get_center() + UP * 0.48
         )
 
         self.play(
             GrowArrow(bridge),
-            Write(bridge_text),
+            FadeIn(bridge_text, shift=UP),
             run_time=1
         )
 
@@ -147,7 +194,8 @@ class VoxPoserScene18(Scene):
             FadeOut(sim_points),
             FadeOut(real_points),
             FadeOut(bridge),
-            FadeOut(bridge_text)
+            FadeOut(bridge_text),
+            run_time=0.8
         )
 
         final = VGroup(
@@ -173,11 +221,18 @@ class VoxPoserScene18(Scene):
 
         self.wait(3)
 
+        # ============================================================
+        # OUTRO
+        # ============================================================
+
         outro = Text(
             "Together, they make the evaluation more convincing.",
             font_size=26,
             color=BLUE
-        ).to_edge(DOWN, buff=0.7)
+        ).to_edge(
+            DOWN,
+            buff=0.7
+        )
 
         self.play(
             Write(outro),

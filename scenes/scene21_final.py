@@ -96,7 +96,10 @@ class VoxPoserScene21(Scene):
         self.play(
             LaggedStart(
                 *[
-                    FadeIn(x, shift=RIGHT)
+                    FadeIn(
+                        x,
+                        shift=RIGHT
+                    )
                     for x in ideas
                 ],
                 lag_ratio=0.2
@@ -141,6 +144,10 @@ class VoxPoserScene21(Scene):
         # PHYSICAL AI
         # ============================================================
 
+        self.play(
+            FadeOut(big)
+        )
+
         physical_ai = Text(
             "This is the Physical AI perspective:",
             font_size=28,
@@ -156,8 +163,7 @@ class VoxPoserScene21(Scene):
         )
 
         statement = Text(
-            "reason about the world in language,"
-            "\n"
+            "reason about the world in language,\n"
             "but act through physical space.",
             font_size=32,
             color=GREEN
@@ -166,62 +172,47 @@ class VoxPoserScene21(Scene):
         )
 
         self.play(
-            FadeIn(statement, shift=UP),
+            FadeIn(
+                statement,
+                shift=UP
+            ),
             run_time=1.5
         )
 
         self.wait(4)
 
         # ============================================================
-        # FINAL
+        # TRANSITION TO SCENE 22
         # ============================================================
 
         self.play(
-            FadeOut(big),
             FadeOut(physical_ai),
             FadeOut(statement),
             FadeOut(title)
         )
 
-        final_title = Text(
-            "VoxPoser",
-            font_size=52,
-            color=BLUE
-        )
-
-        final_subtitle = Text(
-            "Composable 3D Value Maps for Robotic Manipulation",
-            font_size=25,
-            color=GRAY
-        )
-
-        final = VGroup(
-            final_title,
-            final_subtitle
+        transition = VGroup(
+            Text(
+                "But what does the system actually generate?",
+                font_size=29,
+                color=BLUE
+            ),
+            Text(
+                "Let's look inside the LLM.",
+                font_size=31,
+                color=GREEN
+            )
         ).arrange(
             DOWN,
             buff=0.25
         )
 
         self.play(
-            FadeIn(final, shift=UP),
-            run_time=1.8
-        )
-
-        self.wait(4)
-
-        thank_you = Text(
-            "Thank you for watching.",
-            font_size=28,
-            color=GRAY
-        ).to_edge(
-            DOWN,
-            buff=0.7
-        )
-
-        self.play(
-            FadeIn(thank_you),
-            run_time=1
+            FadeIn(
+                transition,
+                shift=UP
+            ),
+            run_time=1.5
         )
 
         self.wait(4)

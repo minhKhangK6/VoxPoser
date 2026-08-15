@@ -4,6 +4,10 @@ from manim import *
 class VoxPoserScene9(Scene):
     def construct(self):
 
+        # ============================================================
+        # COLORS
+        # ============================================================
+
         BLUE = "#5DADE2"
         GREEN = "#58D68D"
         RED = "#EC7063"
@@ -47,56 +51,116 @@ class VoxPoserScene9(Scene):
             Write(open_title)
         )
 
-        stages = VGroup(
-            RoundedRectangle(
-                width=2.4,
-                height=0.8,
-                color=YELLOW,
-                fill_opacity=0.08
-            ),
-            RoundedRectangle(
-                width=2.4,
-                height=0.8,
-                color=GREEN,
-                fill_opacity=0.08
-            ),
-            RoundedRectangle(
-                width=2.4,
-                height=0.8,
-                color=BLUE,
-                fill_opacity=0.08
-            )
-        ).arrange(
-            DOWN,
-            buff=0.35
+        # ------------------------------------------------------------
+        # PLAN
+        # ------------------------------------------------------------
+
+        plan_box = RoundedRectangle(
+            width=3.0,
+            height=0.95,
+            corner_radius=0.14,
+            color=YELLOW,
+            fill_opacity=0.08,
+            stroke_width=2
         ).move_to(
-            LEFT * 3.3
+            LEFT * 3.3 + UP * 0.85
         )
 
-        stage_text = VGroup(
-            Text("Plan", font_size=24),
-            Text("Execute", font_size=24),
-            Text("Hope nothing changes", font_size=20, color=RED)
+        plan_text = Text(
+            "Plan",
+            font_size=26,
+            color=YELLOW
+        ).move_to(
+            plan_box
         )
 
-        for text, box in zip(stage_text, stages):
-            text.move_to(box)
+        # ------------------------------------------------------------
+        # EXECUTE
+        # ------------------------------------------------------------
+
+        execute_box = RoundedRectangle(
+            width=3.0,
+            height=0.95,
+            corner_radius=0.14,
+            color=GREEN,
+            fill_opacity=0.08,
+            stroke_width=2
+        ).move_to(
+            LEFT * 3.3 + DOWN * 0.15
+        )
+
+        execute_text = Text(
+            "Execute",
+            font_size=26,
+            color=GREEN
+        ).move_to(
+            execute_box
+        )
+
+        # ------------------------------------------------------------
+        # HOPE
+        # ------------------------------------------------------------
+
+        hope_box = RoundedRectangle(
+            width=3.0,
+            height=0.95,
+            corner_radius=0.14,
+            color=BLUE,
+            fill_opacity=0.08,
+            stroke_width=2
+        ).move_to(
+            LEFT * 3.3 + DOWN * 1.15
+        )
+
+        hope_text = Text(
+            "Hope nothing\nchanges",
+            font_size=21,
+            color=RED
+        ).move_to(
+            hope_box
+        )
+
+        # ------------------------------------------------------------
+        # OPEN-LOOP ARROWS
+        # ------------------------------------------------------------
+
+        arrow1 = Arrow(
+            plan_box.get_bottom(),
+            execute_box.get_top(),
+            buff=0.06,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.16
+        )
+
+        arrow2 = Arrow(
+            execute_box.get_bottom(),
+            hope_box.get_top(),
+            buff=0.06,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.16
+        )
+
+        # ------------------------------------------------------------
+        # ANIMATION
+        # ------------------------------------------------------------
 
         self.play(
-            FadeIn(stages[0]),
-            Write(stage_text[0]),
+            FadeIn(plan_box),
+            Write(plan_text),
             run_time=0.7
         )
 
         self.play(
-            FadeIn(stages[1]),
-            Write(stage_text[1]),
+            GrowArrow(arrow1),
+            FadeIn(execute_box),
+            Write(execute_text),
             run_time=0.7
         )
 
         self.play(
-            FadeIn(stages[2]),
-            Write(stage_text[2]),
+            GrowArrow(arrow2),
+            FadeIn(hope_box),
+            Write(hope_text),
             run_time=0.7
         )
 
@@ -118,13 +182,16 @@ class VoxPoserScene9(Scene):
             Write(disturbance)
         )
 
-        # Robot and obstacle
+        # ------------------------------------------------------------
+        # ROBOT / OBSTACLE / TARGET
+        # ------------------------------------------------------------
+
         robot = Circle(
             radius=0.18,
             color=YELLOW,
             fill_opacity=1
         ).move_to(
-            RIGHT * 2.2 + DOWN * 0.3
+            RIGHT * 2.0 + DOWN * 0.3
         )
 
         obstacle = Circle(
@@ -161,7 +228,10 @@ class VoxPoserScene9(Scene):
             run_time=1
         )
 
-        # Old trajectory
+        # ------------------------------------------------------------
+        # OLD TRAJECTORY
+        # ------------------------------------------------------------
+
         old_path = VMobject(
             color=RED,
             stroke_width=4
@@ -203,133 +273,191 @@ class VoxPoserScene9(Scene):
 
         self.play(
             FadeOut(open_title),
-            FadeOut(stages),
-            FadeOut(stage_text),
+            FadeOut(plan_box),
+            FadeOut(execute_box),
+            FadeOut(hope_box),
+            FadeOut(plan_text),
+            FadeOut(execute_text),
+            FadeOut(hope_text),
+            FadeOut(arrow1),
+            FadeOut(arrow2),
             FadeOut(disturbance),
+            FadeOut(robot),
+            FadeOut(obstacle),
+            FadeOut(target),
+            FadeOut(target_text),
             FadeOut(old_path),
             FadeOut(collision_text)
         )
 
         closed_title = Text(
             "Closed-loop execution",
-            font_size=29,
+            font_size=30,
             color=GREEN
         ).to_edge(
             UP,
-            buff=1.35
+            buff=1.25
         )
 
         self.play(
             Write(closed_title)
         )
 
-        # Circular pipeline
+        # ============================================================
+        # CLOSED-LOOP — 2 x 2 LAYOUT
+        # ============================================================
+
         observe = RoundedRectangle(
-            width=2.3,
-            height=0.8,
+            width=3.0,
+            height=1.0,
+            corner_radius=0.16,
             color=BLUE,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2.2
         ).move_to(
-            LEFT * 3.7
+            LEFT * 3.0 + UP * 0.35
         )
 
         plan = RoundedRectangle(
-            width=2.3,
-            height=0.8,
+            width=3.0,
+            height=1.0,
+            corner_radius=0.16,
             color=PURPLE,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2.2
         ).move_to(
-            LEFT * 1.2
+            RIGHT * 3.0 + UP * 0.35
         )
 
         execute = RoundedRectangle(
-            width=2.3,
-            height=0.8,
+            width=3.0,
+            height=1.0,
+            corner_radius=0.16,
             color=YELLOW,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2.2
         ).move_to(
-            RIGHT * 1.3
+            RIGHT * 3.0 + DOWN * 1.25
         )
 
         feedback = RoundedRectangle(
-            width=2.3,
-            height=0.8,
+            width=3.0,
+            height=1.0,
+            corner_radius=0.16,
             color=ORANGE,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2.2
         ).move_to(
-            RIGHT * 3.9
+            LEFT * 3.0 + DOWN * 1.25
         )
 
-        boxes = VGroup(
-            observe,
-            plan,
-            execute,
+        # ------------------------------------------------------------
+        # TEXT
+        # ------------------------------------------------------------
+
+        observe_text = Text(
+            "Observe",
+            font_size=25,
+            color=BLUE
+        ).move_to(
+            observe
+        )
+
+        plan_text2 = Text(
+            "Plan",
+            font_size=25,
+            color=PURPLE
+        ).move_to(
+            plan
+        )
+
+        execute_text2 = Text(
+            "Execute",
+            font_size=25,
+            color=YELLOW
+        ).move_to(
+            execute
+        )
+
+        feedback_text = Text(
+            "Visual\nfeedback",
+            font_size=21,
+            color=ORANGE,
+            line_spacing=0.85
+        ).move_to(
             feedback
         )
 
-        texts = VGroup(
-            Text("Observe", font_size=22, color=BLUE),
-            Text("Plan", font_size=22, color=PURPLE),
-            Text("Execute", font_size=22, color=YELLOW),
-            Text("Visual feedback", font_size=20, color=ORANGE)
+        # ------------------------------------------------------------
+        # LOOP ARROWS
+        # ------------------------------------------------------------
+
+        arrow_observe_plan = Arrow(
+            observe.get_right(),
+            plan.get_left(),
+            buff=0.14,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
         )
 
-        for text, box in zip(texts, boxes):
-            text.move_to(box)
-
-        arrows = VGroup(
-            Arrow(
-                observe.get_right(),
-                plan.get_left(),
-                buff=0.1
-            ),
-            Arrow(
-                plan.get_right(),
-                execute.get_left(),
-                buff=0.1
-            ),
-            Arrow(
-                execute.get_right(),
-                feedback.get_left(),
-                buff=0.1
-            ),
-            Arrow(
-                feedback.get_bottom(),
-                observe.get_bottom(),
-                buff=0.1
-            )
+        arrow_plan_execute = Arrow(
+            plan.get_bottom(),
+            execute.get_top(),
+            buff=0.14,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
         )
+
+        arrow_execute_feedback = Arrow(
+            execute.get_left(),
+            feedback.get_right(),
+            buff=0.14,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
+        )
+
+        arrow_feedback_observe = Arrow(
+            feedback.get_top(),
+            observe.get_bottom(),
+            buff=0.14,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
+        )
+
+        # ------------------------------------------------------------
+        # ANIMATE LOOP
+        # ------------------------------------------------------------
 
         self.play(
             FadeIn(observe),
-            Write(texts[0]),
-            run_time=0.6
+            Write(observe_text),
+            run_time=0.7
         )
 
         self.play(
-            GrowArrow(arrows[0]),
+            GrowArrow(arrow_observe_plan),
             FadeIn(plan),
-            Write(texts[1]),
-            run_time=0.6
+            Write(plan_text2),
+            run_time=0.7
         )
 
         self.play(
-            GrowArrow(arrows[1]),
+            GrowArrow(arrow_plan_execute),
             FadeIn(execute),
-            Write(texts[2]),
-            run_time=0.6
+            Write(execute_text2),
+            run_time=0.7
         )
 
         self.play(
-            GrowArrow(arrows[2]),
+            GrowArrow(arrow_execute_feedback),
             FadeIn(feedback),
-            Write(texts[3]),
-            run_time=0.6
+            Write(feedback_text),
+            run_time=0.7
         )
 
         self.play(
-            GrowArrow(arrows[3]),
-            run_time=0.8
+            GrowArrow(arrow_feedback_observe),
+            run_time=0.9
         )
 
         self.wait(2)
@@ -340,9 +468,10 @@ class VoxPoserScene9(Scene):
 
         frequency = MathTex(
             r"5\ \mathrm{Hz}"
-        ).scale(1.2).to_edge(
-            DOWN,
-            buff=0.8
+        ).scale(
+            1.2
+        ).move_to(
+            DOWN * 2.55
         )
 
         frequency_text = Text(
@@ -352,12 +481,7 @@ class VoxPoserScene9(Scene):
         ).next_to(
             frequency,
             DOWN,
-            buff=0.15
-        )
-
-        self.add(
-            frequency,
-            frequency_text
+            buff=0.12
         )
 
         self.play(
@@ -371,6 +495,11 @@ class VoxPoserScene9(Scene):
         # ============================================================
         # CACHED LANGUAGE MODEL OUTPUT
         # ============================================================
+
+        self.play(
+            FadeOut(frequency),
+            FadeOut(frequency_text)
+        )
 
         cache_text = Text(
             "The language-model output can stay fixed;",
@@ -391,7 +520,7 @@ class VoxPoserScene9(Scene):
             DOWN,
             buff=0.18
         ).move_to(
-            DOWN * 2.2
+            DOWN * 2.25
         )
 
         self.play(

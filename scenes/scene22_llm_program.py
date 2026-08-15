@@ -25,7 +25,10 @@ class VoxPoserScene22(Scene):
             buff=0.45
         )
 
-        self.play(Write(title))
+        self.play(
+            Write(title)
+        )
+
         self.wait(2)
 
         # ============================================================
@@ -35,25 +38,29 @@ class VoxPoserScene22(Scene):
         prompt = RoundedRectangle(
             width=4.0,
             height=1.15,
+            corner_radius=0.16,
             color=YELLOW,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2
         ).move_to(
-            LEFT * 4.1 + UP * 1.0
+            LEFT * 3.0 + UP * 1.30
         )
 
         prompt_text = Text(
             '"Close the top drawer."',
             font_size=25,
             color=YELLOW
-        ).move_to(prompt)
+        ).move_to(
+            prompt
+        )
 
         self.play(
             FadeIn(prompt),
             Write(prompt_text),
-            run_time=1.5
+            run_time=1.3
         )
 
-        self.wait(2)
+        self.wait(1.5)
 
         # ============================================================
         # LLM
@@ -62,44 +69,52 @@ class VoxPoserScene22(Scene):
         llm = RoundedRectangle(
             width=3.0,
             height=1.2,
+            corner_radius=0.16,
             color=GREEN,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2
         ).move_to(
-            ORIGIN + UP * 1.0
+            RIGHT * 1.8 + UP * 1.30
         )
 
         llm_text = Text(
             "LLM\nreasoning + code",
             font_size=24,
             color=GREEN
-        ).move_to(llm)
+        ).move_to(
+            llm
+        )
 
         arrow1 = Arrow(
             prompt.get_right(),
             llm.get_left(),
-            buff=0.12
+            buff=0.12,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
         )
 
         self.play(
             GrowArrow(arrow1),
             FadeIn(llm),
             Write(llm_text),
-            run_time=1.5
+            run_time=1.3
         )
 
         self.wait(2)
 
         # ============================================================
-        # PROGRAM
+        # GENERATED PROGRAM
         # ============================================================
 
         code_box = RoundedRectangle(
             width=7.2,
             height=3.2,
+            corner_radius=0.18,
             color=PURPLE,
-            fill_opacity=0.06
+            fill_opacity=0.06,
+            stroke_width=2
         ).move_to(
-            DOWN * 1.0
+            DOWN * 1.35
         )
 
         code_title = Text(
@@ -107,7 +122,7 @@ class VoxPoserScene22(Scene):
             font_size=24,
             color=PURPLE
         ).move_to(
-            code_box.get_top() + DOWN * 0.4
+            code_box.get_top() + DOWN * 0.38
         )
 
         code_lines = VGroup(
@@ -137,15 +152,19 @@ class VoxPoserScene22(Scene):
             )
         ).arrange(
             DOWN,
-            buff=0.18
+            buff=0.18,
+            aligned_edge=LEFT
         ).move_to(
-            code_box.get_center() + DOWN * 0.2
+            code_box.get_center() + DOWN * 0.10
         )
 
         arrow2 = Arrow(
             llm.get_bottom(),
             code_box.get_top(),
-            buff=0.12
+            buff=0.12,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14,
+            color=PURPLE
         )
 
         self.play(
@@ -169,40 +188,74 @@ class VoxPoserScene22(Scene):
             run_time=2.5
         )
 
-        self.wait(4)
+        self.wait(3)
 
         # ============================================================
         # EXPLANATION
         # ============================================================
 
-        explanation = Text(
+        # Remove the diagram BEFORE showing explanation text.
+        self.play(
+            FadeOut(
+                prompt,
+                prompt_text,
+                llm,
+                llm_text,
+                arrow1,
+                code_box,
+                code_title,
+                code_lines,
+                arrow2
+            ),
+            run_time=0.8
+        )
+
+        explanation_title = Text(
+            "What does the LLM decide?",
+            font_size=30,
+            color=GREEN
+        ).to_edge(
+            UP,
+            buff=1.20
+        )
+
+        explanation1 = Text(
             "The LLM decides what spatial information is needed.",
             font_size=27,
             color=GREEN
-        ).to_edge(
-            DOWN,
-            buff=1.0
+        ).move_to(
+            UP * 0.25
         )
 
         explanation2 = Text(
             "The robotics system then turns that information into motion.",
             font_size=24,
             color=BLUE
-        ).to_edge(
-            DOWN,
-            buff=0.55
+        ).move_to(
+            DOWN * 0.55
+        )
+
+        explanation_arrow = Arrow(
+            explanation1.get_bottom(),
+            explanation2.get_top(),
+            buff=0.15,
+            color=GRAY,
+            stroke_width=3,
+            max_tip_length_to_length_ratio=0.14
         )
 
         self.play(
-            Write(explanation),
-            run_time=1.3
+            Write(explanation_title),
+            FadeIn(explanation1, shift=UP),
+            run_time=1.0
         )
 
-        self.wait(2)
+        self.wait(1)
 
         self.play(
-            Write(explanation2),
-            run_time=1.2
+            GrowArrow(explanation_arrow),
+            FadeIn(explanation2, shift=UP),
+            run_time=1.0
         )
 
         self.wait(4)
@@ -212,17 +265,12 @@ class VoxPoserScene22(Scene):
         # ============================================================
 
         self.play(
-            FadeOut(explanation),
-            FadeOut(explanation2),
-            FadeOut(code_box),
-            FadeOut(code_title),
-            FadeOut(code_lines),
-            FadeOut(arrow2),
-            FadeOut(prompt),
-            FadeOut(prompt_text),
-            FadeOut(llm),
-            FadeOut(llm_text),
-            FadeOut(arrow1)
+            FadeOut(
+                explanation_title,
+                explanation1,
+                explanation2,
+                explanation_arrow
+            )
         )
 
         final = Text(
@@ -232,7 +280,10 @@ class VoxPoserScene22(Scene):
         )
 
         self.play(
-            FadeIn(final),
+            FadeIn(
+                final,
+                shift=UP
+            ),
             run_time=1.5
         )
 

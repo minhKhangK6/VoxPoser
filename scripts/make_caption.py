@@ -5,13 +5,14 @@ import imageio_ffmpeg
 
 
 # ============================================================
-# FILE CẤU HÌNH
+# CONFIG
 # ============================================================
 
 NARRATION_FILE = "narration.txt"
 OUTPUT_SRT = "caption.srt"
 
-# 24 scene theo đúng thứ tự final video
+VOICE_DIR = "voice"
+
 SCENE_FILES = [
     r"media/videos/scene1_intro/1080p60/VoxPoserScene1.mp4",
     r"media/videos/scene2_language/1080p60/VoxPoserScene2.mp4",
@@ -39,23 +40,15 @@ SCENE_FILES = [
     r"media/videos/scene24_aha/1080p60/VoxPoserScene24.mp4",
 ]
 
-# Scene 1 fallback nếu bạn chưa đổi tên lại file MP4.
 SCENE1_FALLBACK = (
     r"media/videos/scene1_intro_v2/1080p60/"
     r"VoxPoserScene1V2.mp4"
 )
 
-# ============================================================
-# GIỌNG ĐỌC ƯỚC LƯỢNG
-# ============================================================
-# 145 từ/phút là tốc độ tương đối dễ nghe.
-# Script sẽ dùng giá trị này để kiểm tra narration có vừa scene không.
-WORDS_PER_MINUTE = 145.0
-
-# Subtitle nên ngắn, dễ đọc.
+# Maximum words per subtitle line/block.
 MAX_WORDS_PER_CAPTION = 14
 
-# Khoảng nghỉ giữa các caption.
+# Small gap between subtitle blocks.
 CAPTION_GAP = 0.08
 
 
@@ -64,12 +57,13 @@ CAPTION_GAP = 0.08
 # ============================================================
 
 def format_srt_time(seconds):
-    """Convert seconds -> HH:MM:SS,mmm"""
 
     if seconds < 0:
         seconds = 0
 
-    milliseconds = int(round(seconds * 1000))
+    milliseconds = int(
+        round(seconds * 1000)
+    )
 
     hours = milliseconds // 3_600_000
     milliseconds %= 3_600_000
@@ -89,20 +83,17 @@ def format_srt_time(seconds):
 
 
 # ============================================================
-# FFPROBE
+# GET MEDIA DURATION
 # ============================================================
 
-def get_duration(video_path):
-    """Get exact video duration using FFmpeg bundled with imageio."""
+def get_duration(media_path):
 
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
 
-    # ffprobe is normally not bundled separately by imageio-ffmpeg.
-    # Instead, use ffmpeg itself to inspect duration.
     cmd = [
         ffmpeg_exe,
         "-i",
-        video_path
+        media_path
     ]
 
     result = subprocess.run(
@@ -114,18 +105,14 @@ def get_duration(video_path):
         errors="ignore"
     )
 
-    output = result.stderr
-
-    # Example:
-    # Duration: 00:00:49.03
     match = re.search(
         r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)",
-        output
+        result.stderr
     )
 
     if not match:
         raise RuntimeError(
-            f"Could not read duration: {video_path}"
+            f"Could not read duration: {media_path}"
         )
 
     hours = int(match.group(1))
@@ -140,18 +127,21 @@ def get_duration(video_path):
 
 
 # ============================================================
-# RESOLVE SCENE 1
+# RESOLVE SCENE PATH
 # ============================================================
 
 def resolve_scene_path(index, path):
+
     if os.path.exists(path):
         return path
 
     if index == 1 and os.path.exists(SCENE1_FALLBACK):
+
         print(
-            "[INFO] Scene 1: "
-            "using existing VoxPoserScene1V2.mp4"
+            "[INFO] Scene 1: using existing "
+            "VoxPoserScene1V2.mp4"
         )
+
         return SCENE1_FALLBACK
 
     return None
@@ -162,7 +152,10 @@ def resolve_scene_path(index, path):
 # ============================================================
 
 def read_narration():
-    if not os.path.exists(NARRATION_FILE):
+
+    if not os.path.exists(
+        NARRATION_FILE
+    ):
         raise FileNotFoundError(
             f"Cannot find {NARRATION_FILE}"
         )
@@ -172,29 +165,15 @@ def read_narration():
         "r",
         encoding="utf-8"
     ) as f:
+
         return f.read()
 
 
 # ============================================================
-# PARSE SCENES
+# PARSE SCENE NARRATION
 # ============================================================
 
 def parse_scene_narration(text):
-    """
-    Read:
-        [SCENE 01]
-        narration...
-
-        [SCENE 02]
-        narration...
-
-    Return:
-        {
-            1: "...",
-            2: "...",
-            ...
-        }
-    """
 
     pattern = re.compile(
         r"\[SCENE\s+(\d+)\]\s*(.*?)(?=\[SCENE\s+\d+\]|\Z)",
@@ -206,8 +185,14 @@ def parse_scene_narration(text):
     scene_text = {}
 
     for number, body in matches:
+
         number = int(number)
-        body = body.strip()
+
+        body = re.sub(
+            r"\s+",
+            " ",
+            body
+        ).strip()
 
         scene_text[number] = body
 
@@ -219,9 +204,6 @@ def parse_scene_narration(text):
 # ============================================================
 
 def split_sentences(text):
-    """
-    Split narration into sentence-like chunks.
-    """
 
     text = re.sub(
         r"\s+",
@@ -229,16 +211,15 @@ def split_sentences(text):
         text
     ).strip()
 
-    # Split after ., !, ?
     sentences = re.split(
         r"(?<=[.!?])\s+",
         text
     )
 
     return [
-        s.strip()
-        for s in sentences
-        if s.strip()
+        sentence.strip()
+        for sentence in sentences
+        if sentence.strip()
     ]
 
 
@@ -247,6 +228,7 @@ def split_sentences(text):
 # ============================================================
 
 def split_long_sentence(sentence):
+
     words = sentence.split()
 
     if len(words) <= MAX_WORDS_PER_CAPTION:
@@ -269,6 +251,7 @@ def split_long_sentence(sentence):
             current = []
 
     if current:
+
         chunks.append(
             " ".join(current)
         )
@@ -277,7 +260,7 @@ def split_long_sentence(sentence):
 
 
 # ============================================================
-# MAKE CAPTIONS
+# MAKE CAPTION CHUNKS
 # ============================================================
 
 def make_caption_chunks(text):
@@ -288,31 +271,18 @@ def make_caption_chunks(text):
 
     for sentence in sentences:
 
-        parts = split_long_sentence(sentence)
+        parts = split_long_sentence(
+            sentence
+        )
 
         for part in parts:
-
-            word_count = len(
-                part.split()
-            )
-
-            # Estimated reading time
-            duration = (
-                word_count
-                / WORDS_PER_MINUTE
-                * 60.0
-            )
-
-            # Give very short captions a readable minimum
-            duration = max(
-                duration,
-                1.2
-            )
 
             chunks.append(
                 {
                     "text": part,
-                    "duration": duration
+                    "words": len(
+                        part.split()
+                    )
                 }
             )
 
@@ -330,7 +300,7 @@ def main():
     print("=" * 65)
 
     # ------------------------------------------------------------
-    # Load narration
+    # LOAD NARRATION
     # ------------------------------------------------------------
 
     narration = read_narration()
@@ -344,64 +314,116 @@ def main():
         f"{len(scene_narration)} scenes."
     )
 
+    if len(scene_narration) != 24:
+
+        raise RuntimeError(
+            "Expected exactly 24 scenes."
+        )
+
     # ------------------------------------------------------------
-    # Check all 24 scenes
+    # READ VIDEO + VOICE DURATIONS
     # ------------------------------------------------------------
 
-    scene_durations = {}
+    scene_info = {}
 
-    print("\nReading actual scene durations...\n")
+    current_global_time = 0.0
 
-    for i, path in enumerate(
+    print(
+        "\nReading actual video and voice durations...\n"
+    )
+
+    for i, scene_path in enumerate(
         SCENE_FILES,
         start=1
     ):
 
-        resolved = resolve_scene_path(
+        resolved_scene = resolve_scene_path(
             i,
-            path
+            scene_path
         )
 
-        if not resolved:
+        if not resolved_scene:
 
             raise FileNotFoundError(
                 f"Scene {i:02d} not found:\n"
-                f"{path}"
+                f"{scene_path}"
             )
 
-        duration = get_duration(
-            resolved
+        voice_path = os.path.join(
+            VOICE_DIR,
+            f"scene{i:02d}.mp3"
         )
 
-        scene_durations[i] = duration
+        if not os.path.exists(voice_path):
+
+            raise FileNotFoundError(
+                f"Voice file missing:\n"
+                f"{voice_path}"
+            )
+
+        video_duration = get_duration(
+            resolved_scene
+        )
+
+        voice_duration = get_duration(
+            voice_path
+        )
+
+        scene_info[i] = {
+            "video_duration": video_duration,
+            "voice_duration": voice_duration,
+            "start": current_global_time
+        }
 
         print(
             f"Scene {i:02d}: "
-            f"{duration:.2f} sec"
+            f"video = {video_duration:.2f}s | "
+            f"voice = {voice_duration:.2f}s | "
+            f"start = {current_global_time:.2f}s"
         )
 
+        current_global_time += video_duration
+
+    total_video_duration = current_global_time
+
     # ------------------------------------------------------------
-    # Generate captions
+    # MAKE CAPTIONS
     # ------------------------------------------------------------
 
     all_entries = []
 
-    current_global_time = 0.0
+    entry_number = 1
 
     warnings = []
 
-    entry_number = 1
+    print(
+        "\n" + "=" * 65
+    )
 
-    print("\nChecking narration timing...\n")
+    print(
+        "CHECKING ACTUAL VOICE TIMING"
+    )
+
+    print(
+        "=" * 65
+    )
 
     for scene_number in range(
         1,
         25
     ):
 
-        scene_duration = scene_durations[
+        video_duration = scene_info[
             scene_number
-        ]
+        ]["video_duration"]
+
+        voice_duration = scene_info[
+            scene_number
+        ]["voice_duration"]
+
+        scene_start = scene_info[
+            scene_number
+        ]["start"]
 
         text = scene_narration.get(
             scene_number,
@@ -415,84 +437,96 @@ def main():
                 "NO NARRATION"
             )
 
-            current_global_time += scene_duration
             continue
+
+        print(
+            f"Scene {scene_number:02d}: "
+            f"video = {video_duration:.2f}s, "
+            f"voice = {voice_duration:.2f}s"
+        )
+
+        # --------------------------------------------------------
+        # CHECK IF ACTUAL VOICE IS TOO LONG
+        # --------------------------------------------------------
+
+        if voice_duration > video_duration:
+
+            difference = (
+                voice_duration
+                - video_duration
+            )
+
+            warnings.append(
+                f"Scene {scene_number:02d}: "
+                f"voice is {difference:.2f}s "
+                f"longer than video"
+            )
+
+        # --------------------------------------------------------
+        # CREATE CAPTION CHUNKS
+        # --------------------------------------------------------
 
         chunks = make_caption_chunks(
             text
         )
 
-        estimated_voice_duration = sum(
-            chunk["duration"]
+        if not chunks:
+            continue
+
+        # --------------------------------------------------------
+        # DISTRIBUTE CAPTION TIME USING
+        # ACTUAL VOICE DURATION
+        #
+        # Subtitle timing is proportional to word count.
+        # This is much more reliable than estimating 145 WPM.
+        # --------------------------------------------------------
+
+        total_words = sum(
+            chunk["words"]
             for chunk in chunks
         )
 
-        print(
-            f"Scene {scene_number:02d}: "
-            f"animation = {scene_duration:.2f}s, "
-            f"estimated narration = "
-            f"{estimated_voice_duration:.2f}s"
+        usable_voice_duration = min(
+            voice_duration,
+            video_duration
         )
 
-        # --------------------------------------------------------
-        # Warning if voice is too long
-        # --------------------------------------------------------
-
-        if estimated_voice_duration > scene_duration:
-
-            difference = (
-                estimated_voice_duration
-                - scene_duration
-            )
-
-            warnings.append(
-                f"Scene {scene_number:02d}: "
-                f"narration is about "
-                f"{difference:.1f}s too long"
-            )
-
-        # --------------------------------------------------------
-        # Temporarily scale chunks to fit scene
-        #
-        # IMPORTANT:
-        # This does NOT change narration speed.
-        # It only creates a preliminary SRT timeline.
-        # We will use the warning above to revise narration.
-        # --------------------------------------------------------
-
-        scene_start = current_global_time
-
-        available_duration = max(
-            scene_duration - 0.15,
+        # Leave a tiny margin before the scene ends.
+        usable_voice_duration = max(
+            usable_voice_duration - 0.10,
             0.5
-        )
-
-        total_estimated = max(
-            estimated_voice_duration,
-            0.001
-        )
-
-        scale = min(
-            1.0,
-            available_duration
-            / total_estimated
         )
 
         cursor = scene_start
 
         for chunk in chunks:
 
-            duration = (
-                chunk["duration"]
-                * scale
+            word_ratio = (
+                chunk["words"]
+                / total_words
+            )
+
+            caption_duration = (
+                usable_voice_duration
+                * word_ratio
             )
 
             start_time = cursor
 
-            end_time = min(
-                cursor + duration,
+            end_time = (
+                cursor
+                + caption_duration
+            )
+
+            # Never go outside current scene.
+            scene_end = (
                 scene_start
-                + available_duration
+                + video_duration
+            )
+
+            end_time = min(
+                end_time,
+                scene_end
             )
 
             all_entries.append(
@@ -511,10 +545,8 @@ def main():
                 + CAPTION_GAP
             )
 
-        current_global_time += scene_duration
-
     # ------------------------------------------------------------
-    # Write SRT
+    # WRITE SRT
     # ------------------------------------------------------------
 
     with open(
@@ -540,20 +572,24 @@ def main():
             )
 
     # ------------------------------------------------------------
-    # Summary
+    # SUMMARY
     # ------------------------------------------------------------
 
-    total_duration = sum(
-        scene_durations.values()
+    print(
+        "\n" + "=" * 65
     )
 
-    print("\n" + "=" * 65)
-    print("DONE")
-    print("=" * 65)
+    print(
+        "DONE"
+    )
+
+    print(
+        "=" * 65
+    )
 
     print(
         f"Video duration: "
-        f"{total_duration:.2f} sec"
+        f"{total_video_duration:.2f} sec"
     )
 
     print(
@@ -566,28 +602,40 @@ def main():
         f"{len(all_entries)}"
     )
 
+    # ------------------------------------------------------------
+    # WARNINGS
+    # ------------------------------------------------------------
+
     if warnings:
 
-        print("\n" + "=" * 65)
-        print("IMPORTANT WARNINGS")
-        print("=" * 65)
+        print(
+            "\n" + "=" * 65
+        )
+
+        print(
+            "IMPORTANT WARNINGS"
+        )
+
+        print(
+            "=" * 65
+        )
 
         for warning in warnings:
+
             print(
                 "[WARNING]",
                 warning
             )
 
         print(
-            "\nThe SRT was generated, "
-            "but narration should be revised "
-            "for scenes with timing warnings."
+            "\nThese warnings are based on "
+            "the actual MP3 duration."
         )
 
     else:
 
         print(
-            "\nNo narration timing warnings."
+            "\nNo actual voice timing warnings."
         )
 
 

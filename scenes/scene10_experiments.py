@@ -4,6 +4,10 @@ from manim import *
 class VoxPoserScene10(Scene):
     def construct(self):
 
+        # ============================================================
+        # COLORS
+        # ============================================================
+
         BLUE = "#5DADE2"
         GREEN = "#58D68D"
         YELLOW = "#F4D03F"
@@ -38,8 +42,10 @@ class VoxPoserScene10(Scene):
         sim_box = RoundedRectangle(
             width=4.2,
             height=3.0,
+            corner_radius=0.18,
             color=PURPLE,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2
         ).move_to(
             LEFT * 3
         )
@@ -47,8 +53,10 @@ class VoxPoserScene10(Scene):
         real_box = RoundedRectangle(
             width=4.2,
             height=3.0,
+            corner_radius=0.18,
             color=GREEN,
-            fill_opacity=0.08
+            fill_opacity=0.08,
+            stroke_width=2
         ).move_to(
             RIGHT * 3
         )
@@ -78,14 +86,26 @@ class VoxPoserScene10(Scene):
         )
 
         # ============================================================
-        # SIM TASKS
+        # SIMULATION TASKS
         # ============================================================
 
         sim_tasks = VGroup(
-            Text("pick and place", font_size=22),
-            Text("sorting", font_size=22),
-            Text("opening objects", font_size=22),
-            Text("spatial manipulation", font_size=22)
+            Text(
+                "pick and place",
+                font_size=22
+            ),
+            Text(
+                "sorting",
+                font_size=22
+            ),
+            Text(
+                "opening objects",
+                font_size=22
+            ),
+            Text(
+                "spatial manipulation",
+                font_size=22
+            )
         ).arrange(
             DOWN,
             buff=0.22
@@ -93,11 +113,27 @@ class VoxPoserScene10(Scene):
             sim_box.get_center() + DOWN * 0.2
         )
 
+        # ============================================================
+        # REAL ROBOT TASKS
+        # ============================================================
+
         real_tasks = VGroup(
-            Text("drawer manipulation", font_size=22),
-            Text("table setting", font_size=22),
-            Text("trash sorting", font_size=22),
-            Text("contact-rich tasks", font_size=22)
+            Text(
+                "drawer manipulation",
+                font_size=22
+            ),
+            Text(
+                "table setting",
+                font_size=22
+            ),
+            Text(
+                "trash sorting",
+                font_size=22
+            ),
+            Text(
+                "contact-rich tasks",
+                font_size=22
+            )
         ).arrange(
             DOWN,
             buff=0.22
@@ -108,14 +144,20 @@ class VoxPoserScene10(Scene):
         self.play(
             LaggedStart(
                 *[
-                    FadeIn(x, shift=RIGHT)
+                    FadeIn(
+                        x,
+                        shift=RIGHT
+                    )
                     for x in sim_tasks
                 ],
                 lag_ratio=0.15
             ),
             LaggedStart(
                 *[
-                    FadeIn(x, shift=LEFT)
+                    FadeIn(
+                        x,
+                        shift=LEFT
+                    )
                     for x in real_tasks
                 ],
                 lag_ratio=0.15
@@ -129,9 +171,17 @@ class VoxPoserScene10(Scene):
         # FREE-FORM LANGUAGE
         # ============================================================
 
+        # Remove the two large panels completely.
+        # Only the language instruction remains.
+
         self.play(
             FadeOut(sim_tasks),
-            FadeOut(real_tasks)
+            FadeOut(real_tasks),
+            FadeOut(sim_box),
+            FadeOut(real_box),
+            FadeOut(sim_title),
+            FadeOut(real_title),
+            run_time=0.8
         )
 
         language = Text(
@@ -181,7 +231,10 @@ class VoxPoserScene10(Scene):
         self.play(
             LaggedStart(
                 *[
-                    FadeIn(x, shift=UP)
+                    FadeIn(
+                        x,
+                        shift=UP
+                    )
                     for x in open_set
                 ],
                 lag_ratio=0.18
@@ -198,10 +251,7 @@ class VoxPoserScene10(Scene):
         self.play(
             FadeOut(language),
             FadeOut(open_set),
-            FadeOut(sim_box),
-            FadeOut(real_box),
-            FadeOut(sim_title),
-            FadeOut(real_title)
+            FadeOut(title)
         )
 
         final = Text(

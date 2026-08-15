@@ -19,9 +19,15 @@ class VoxPoserScene2(Scene):
             "From Language to Geometry",
             font_size=38,
             color=BLUE_C
-        ).to_edge(UP, buff=0.5)
+        ).to_edge(
+            UP,
+            buff=0.5
+        )
 
-        self.play(Write(title))
+        self.play(
+            Write(title)
+        )
+
         self.wait(1.5)
 
         # ============================================================
@@ -41,11 +47,19 @@ class VoxPoserScene2(Scene):
 
         self.wait(2)
 
+        # Move the instruction upward, but leave enough
+        # vertical space for the next explanatory sentence.
+        self.play(
+            command.animate.to_edge(
+                UP,
+                buff=1.35
+            ),
+            run_time=1
+        )
+
         # ============================================================
         # WHAT DOES THE ROBOT NEED?
         # ============================================================
-
-        self.play(command.animate.to_edge(UP, buff=1.4))
 
         question = Text(
             "What information does the robot actually need?",
@@ -59,17 +73,37 @@ class VoxPoserScene2(Scene):
         )
 
         needs = VGroup(
-            Text("Where is the drawer?", font_size=27, color=BLUE_C),
-            Text("Which part should I touch?", font_size=27, color=GREEN_C),
-            Text("Where can the gripper move?", font_size=27, color=PURPLE_C),
-            Text("What regions should be avoided?", font_size=27, color=RED_C)
+            Text(
+                "Where is the drawer?",
+                font_size=27,
+                color=BLUE_C
+            ),
+            Text(
+                "Which part should I touch?",
+                font_size=27,
+                color=GREEN_C
+            ),
+            Text(
+                "Where can the gripper move?",
+                font_size=27,
+                color=PURPLE_C
+            ),
+            Text(
+                "What regions should be avoided?",
+                font_size=27,
+                color=RED_C
+            )
         ).arrange(
             DOWN,
             aligned_edge=LEFT,
             buff=0.3
         )
 
-        needs.next_to(question, DOWN, buff=0.5)
+        needs.next_to(
+            question,
+            DOWN,
+            buff=0.5
+        )
 
         self.play(
             LaggedStart(
@@ -99,59 +133,100 @@ class VoxPoserScene2(Scene):
             color=WHITE
         )
 
-        self.play(Write(center_text))
+        # Put this sentence below the instruction instead of
+        # sending it to the same top position.
+        center_text.move_to(
+            UP * 0.95
+        )
+
+        self.play(
+            Write(center_text),
+            run_time=1
+        )
 
         self.wait(1.5)
 
-        self.play(
-            center_text.animate.to_edge(UP, buff=1.4)
-        )
+        # Keep the message in this safe middle position.
+        # No longer move it to the top edge.
 
-        # left: language
+        # ============================================================
+        # LEFT: LANGUAGE
+        # ============================================================
+
         language_box = RoundedRectangle(
             width=3.2,
             height=1.5,
             color=YELLOW_C,
             fill_opacity=0.08
-        ).move_to(LEFT * 3.9)
+        ).move_to(
+            LEFT * 3.9 + DOWN * 1.0
+        )
 
         language_text = Text(
             "Natural\nLanguage",
             font_size=27,
             color=YELLOW_C
-        ).move_to(language_box)
+        ).move_to(
+            language_box
+        )
 
-        # middle: concepts
+        # ============================================================
+        # MIDDLE: CONCEPTS
+        # ============================================================
+
         concept_box = RoundedRectangle(
             width=3.4,
             height=2.6,
             color=GREEN_C,
             fill_opacity=0.08
-        ).move_to(ORIGIN)
+        ).move_to(
+            DOWN * 1.0
+        )
 
         concept_text = VGroup(
-            Text("target object", font_size=22),
-            Text("contact region", font_size=22),
-            Text("desired motion", font_size=22),
-            Text("avoidance constraints", font_size=22)
+            Text(
+                "target object",
+                font_size=22
+            ),
+            Text(
+                "contact region",
+                font_size=22
+            ),
+            Text(
+                "desired motion",
+                font_size=22
+            ),
+            Text(
+                "avoidance constraints",
+                font_size=22
+            )
         ).arrange(
             DOWN,
             buff=0.14
-        ).move_to(concept_box)
+        ).move_to(
+            concept_box
+        )
 
-        # right: geometry
+        # ============================================================
+        # RIGHT: GEOMETRY
+        # ============================================================
+
         geometry_box = RoundedRectangle(
             width=3.2,
             height=1.5,
             color=PURPLE_C,
             fill_opacity=0.08
-        ).move_to(RIGHT * 3.9)
+        ).move_to(
+            RIGHT * 3.9 + DOWN * 1.0
+        )
 
         geometry_text = Text(
             "3D Spatial\nRepresentation",
             font_size=25,
             color=PURPLE_C
-        ).move_to(geometry_box)
+        ).move_to(
+            geometry_box
+        )
 
         arrow1 = Arrow(
             language_box.get_right(),
@@ -230,7 +305,10 @@ class VoxPoserScene2(Scene):
             "VoxPoser builds the bridge between them.",
             font_size=28,
             color=GREEN_C
-        ).to_edge(DOWN, buff=0.8)
+        ).to_edge(
+            DOWN,
+            buff=0.8
+        )
 
         self.play(
             Write(outro),

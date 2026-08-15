@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import imageio_ffmpeg
 
@@ -11,33 +12,101 @@ VOICE_DIR = "voice"
 
 OUTPUT_AUDIO = "VoxPoser_SyncedVoice.wav"
 
-# Thời lượng thật của từng scene
-SCENE_DURATIONS = [
-    51.90,
-    36.50,
-    28.10,
-    30.70,
-    34.40,
-    49.50,
-    41.20,
-    35.00,
-    37.50,
-    25.30,
-    26.60,
-    30.10,
-    43.00,
-    30.60,
-    24.30,
-    27.60,
-    24.80,
-    24.00,
-    26.30,
-    43.20,
-    32.30,
-    33.70,
-    35.00,
-    43.80,
+# 24 rendered scene files
+SCENE_FILES = [
+    r"media/videos/scene1_intro/1080p60/VoxPoserScene1.mp4",
+    r"media/videos/scene2_language/1080p60/VoxPoserScene2.mp4",
+    r"media/videos/scene3_architecture/1080p60/VoxPoserScene3.mp4",
+    r"media/videos/scene4_perception/1080p60/VoxPoserScene4.mp4",
+    r"media/videos/scene5_valuemap_types/1080p60/VoxPoserScene5.mp4",
+    r"media/videos/scene6_composition/1080p60/VoxPoserScene6.mp4",
+    r"media/videos/scene7_motion_planning/1080p60/VoxPoserScene7.mp4",
+    r"media/videos/scene8_6dof_action/1080p60/VoxPoserScene8.mp4",
+    r"media/videos/scene9_closed_loop/1080p60/VoxPoserScene9.mp4",
+    r"media/videos/scene10_experiments/1080p60/VoxPoserScene10.mp4",
+    r"media/videos/scene11_commonsense/1080p60/VoxPoserScene11.mp4",
+    r"media/videos/scene12_language_correction/1080p60/VoxPoserScene12.mp4",
+    r"media/videos/scene13_multistep/1080p60/VoxPoserScene13.mp4",
+    r"media/videos/scene14_dynamics/1080p60/VoxPoserScene14.mp4",
+    r"media/videos/scene15_contribution/1080p60/VoxPoserScene15.mp4",
+    r"media/videos/scene16_summary/1080p60/VoxPoserScene16.mp4",
+    r"media/videos/scene17_results/1080p60/VoxPoserScene17.mp4",
+    r"media/videos/scene18_sim_vs_real/1080p60/VoxPoserScene18.mp4",
+    r"media/videos/scene19_limitations/1080p60/VoxPoserScene19.mp4",
+    r"media/videos/scene20_full_pipeline/1080p60/VoxPoserScene20.mp4",
+    r"media/videos/scene21_final/1080p60/VoxPoserScene21.mp4",
+    r"media/videos/scene22_llm_program/1080p60/VoxPoserScene22.mp4",
+    r"media/videos/scene23_zero_shot/1080p60/VoxPoserScene23.mp4",
+    r"media/videos/scene24_aha/1080p60/VoxPoserScene24.mp4",
 ]
+
+# Scene 1 fallback
+SCENE1_FALLBACK = (
+    r"media/videos/scene1_intro_v2/1080p60/"
+    r"VoxPoserScene1V2.mp4"
+)
+
+
+# ============================================================
+# GET VIDEO DURATION
+# ============================================================
+
+def get_duration(video_path):
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+
+    cmd = [
+        ffmpeg_exe,
+        "-i",
+        video_path,
+    ]
+
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+    )
+
+    match = re.search(
+        r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)",
+        result.stderr
+    )
+
+    if not match:
+        raise RuntimeError(
+            f"Could not read duration: {video_path}"
+        )
+
+    hours = int(match.group(1))
+    minutes = int(match.group(2))
+    seconds = float(match.group(3))
+
+    return (
+        hours * 3600
+        + minutes * 60
+        + seconds
+    )
+
+
+# ============================================================
+# RESOLVE SCENE PATH
+# ============================================================
+
+def resolve_scene_path(index, path):
+
+    if os.path.exists(path):
+        return path
+
+    if index == 1 and os.path.exists(SCENE1_FALLBACK):
+        print(
+            "[INFO] Scene 1: using existing "
+            "VoxPoserScene1V2.mp4"
+        )
+        return SCENE1_FALLBACK
+
+    return None
 
 
 # ============================================================
@@ -59,9 +128,7 @@ for i in range(1, 25):
 
     if not os.path.exists(path):
 
-        print(
-            f"[MISSING] {path}"
-        )
+        print(f"[MISSING] {path}")
 
         raise SystemExit(1)
 
@@ -73,24 +140,49 @@ for i in range(1, 25):
 
 
 # ============================================================
-# FFMPEG
+# CHECK SCENES + GET ACTUAL DURATIONS
 # ============================================================
 
-ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-
-
-# ============================================================
-# TÍNH START TIME CỦA TỪNG SCENE
-# ============================================================
+print("\n" + "=" * 60)
+print("READING ACTUAL SCENE DURATIONS")
+print("=" * 60)
 
 scene_start_times = []
 
 current_time = 0.0
 
-for duration in SCENE_DURATIONS:
+resolved_scenes = []
+
+for i, path in enumerate(
+    SCENE_FILES,
+    start=1
+):
+
+    resolved = resolve_scene_path(
+        i,
+        path
+    )
+
+    if not resolved:
+        print(
+            f"[MISSING] Scene {i:02d}: {path}"
+        )
+        raise SystemExit(1)
+
+    duration = get_duration(
+        resolved
+    )
+
+    resolved_scenes.append(resolved)
 
     scene_start_times.append(
         current_time
+    )
+
+    print(
+        f"Scene {i:02d}: "
+        f"{duration:.3f}s | "
+        f"start = {current_time:.3f}s"
     )
 
     current_time += duration
@@ -100,25 +192,21 @@ total_video_duration = current_time
 
 print("\n" + "=" * 60)
 print(
-    f"TOTAL VIDEO TIMELINE: "
-    f"{total_video_duration:.2f} seconds"
+    f"TOTAL VIDEO DURATION: "
+    f"{total_video_duration:.3f}s"
 )
 print("=" * 60)
 
 
 # ============================================================
-# TẠO FILE FILTER SCRIPT CHO FFMPEG
+# FFMPEG
 # ============================================================
-#
-# Mỗi voice được:
-#   1. delay đến đúng thời điểm scene bắt đầu
-#   2. convert sang stereo 48kHz
-#
-# Sau đó tất cả audio được mix thành một track.
-#
-# Nếu voice ngắn hơn scene:
-#   phần còn lại = silence
-#
+
+ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+
+
+# ============================================================
+# BUILD FILTER
 # ============================================================
 
 filter_parts = []
@@ -136,23 +224,16 @@ for i, (
 ):
 
     delay_ms = int(
-        round(
-            start_time * 1000
-        )
+        round(start_time * 1000)
     )
 
-    # Input index
-    input_index = i
-
-    # audio stream
     filter_parts.append(
-        f"[{input_index}:a]"
+        f"[{i}:a]"
         f"aformat="
         f"sample_fmts=fltp:"
         f"sample_rates=48000:"
         f"channel_layouts=stereo,"
-        f"adelay="
-        f"{delay_ms}|{delay_ms}"
+        f"adelay={delay_ms}|{delay_ms}"
         f"[a{i}]"
     )
 
@@ -160,10 +241,6 @@ for i, (
         f"[a{i}]"
     )
 
-
-# ============================================================
-# AMIX
-# ============================================================
 
 filter_complex = ";".join(
     filter_parts
@@ -175,13 +252,15 @@ filter_complex += (
     + f"amix="
       f"inputs={len(audio_inputs)}:"
       f"duration=longest:"
-      f"dropout_transition=0,"
-      f"apad="
-    + "[mixed]"
+      f"dropout_transition=0:"
+      f"normalize=0,"
+      f"apad"
+      f"[mixed]"
 )
 
+
 # ============================================================
-# INPUT ARGUMENTS
+# BUILD COMMAND
 # ============================================================
 
 cmd = [
@@ -191,40 +270,32 @@ cmd = [
 
 for voice_file in voice_files:
 
-    cmd.extend(
-        [
-            "-i",
-            voice_file
-        ]
-    )
+    cmd.extend([
+        "-i",
+        voice_file
+    ])
 
-# ============================================================
-# FILTER
-# ============================================================
+cmd.extend([
+    "-filter_complex",
+    filter_complex,
 
-cmd.extend(
-    [
-        "-filter_complex",
-        filter_complex,
+    "-map",
+    "[mixed]",
 
-        "-map",
-        "[mixed]",
+    "-t",
+    str(total_video_duration),
 
-        "-t",
-        str(total_video_duration),
+    "-ar",
+    "48000",
 
-        "-ar",
-        "48000",
+    "-ac",
+    "2",
 
-        "-ac",
-        "2",
+    "-c:a",
+    "pcm_s16le",
 
-        "-c:a",
-        "pcm_s16le",
-
-        OUTPUT_AUDIO,
-    ]
-)
+    OUTPUT_AUDIO,
+])
 
 
 # ============================================================
@@ -264,5 +335,6 @@ print(
 )
 
 print(
-    f"Duration: {total_video_duration:.2f} seconds"
+    f"Duration: "
+    f"{total_video_duration:.3f} seconds"
 )

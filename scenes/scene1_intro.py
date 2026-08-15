@@ -16,33 +16,24 @@ class VoxPoserScene1(Scene):
         GRAY_C1 = "#BFC9CA"
 
         # ============================================================
-        # HELPER: SMALL TOP BAR
+        # HELPER: TOP BAR
         # ============================================================
 
         def make_top_bar():
-            title = Text(
-                "VoxPoser",
-                font_size=28,
-                color=BLUE_C1
-            )
-
+            # The line is intentionally lower than the logo
+            # and starts to the right of it.
             line = Line(
-                LEFT * 6.2,
+                LEFT * 4.35,
                 RIGHT * 6.2,
                 stroke_width=1.5,
                 color=GRAY_C1
             )
 
-            return VGroup(
-                title,
-                line
-            ).arrange(
-                DOWN,
-                buff=0.12
-            ).to_edge(
-                UP,
-                buff=0.25
+            line.move_to(
+                UP * 3.30
             )
+
+            return line
 
         # ============================================================
         # PART 1 — OPENING TITLE
@@ -89,7 +80,10 @@ class VoxPoserScene1(Scene):
             "VoxPoser",
             font_size=27,
             color=BLUE_C1
-        ).to_corner(UL)
+        ).to_corner(
+            UL,
+            buff=0.28
+        )
 
         self.play(
             Transform(title, mini),
@@ -101,7 +95,7 @@ class VoxPoserScene1(Scene):
         top_bar = make_top_bar()
 
         self.play(
-            FadeIn(top_bar[1]),
+            FadeIn(top_bar),
             run_time=0.5
         )
 
@@ -115,9 +109,7 @@ class VoxPoserScene1(Scene):
             "A human gives the robot a simple instruction.",
             font_size=28,
             color=GRAY_C1
-        )
-
-        instruction_label.to_edge(
+        ).to_edge(
             UP,
             buff=1.35
         )
@@ -145,6 +137,13 @@ class VoxPoserScene1(Scene):
             command
         )
 
+        # Move the whole command block upward.
+        # This creates more room for the question list below
+        # and keeps subtitles away from the content.
+        command_group.move_to(
+            UP * 0.95
+        )
+
         self.play(
             Write(instruction_label),
             Create(command_box),
@@ -167,7 +166,7 @@ class VoxPoserScene1(Scene):
         question.next_to(
             command_group,
             DOWN,
-            buff=0.65
+            buff=0.32
         )
 
         self.play(
@@ -175,49 +174,51 @@ class VoxPoserScene1(Scene):
             run_time=1.2
         )
 
+        # Slightly smaller and more compact than before.
+        # The lower part of the frame is intentionally kept free
+        # for subtitles.
         questions = VGroup(
             Text(
                 "Which object?",
-                font_size=25,
+                font_size=23,
                 color=BLUE_C1
             ),
             Text(
                 "Which part?",
-                font_size=25,
+                font_size=23,
                 color=PURPLE_C1
             ),
             Text(
                 "Where should the gripper go?",
-                font_size=25,
+                font_size=23,
                 color=GREEN_C1
             ),
             Text(
                 "How should the robot move?",
-                font_size=25,
+                font_size=23,
                 color=YELLOW_C1
             ),
             Text(
                 "What should it avoid?",
-                font_size=25,
+                font_size=23,
                 color=RED_C1
             )
         ).arrange(
             DOWN,
             aligned_edge=LEFT,
-            buff=0.22
+            buff=0.13
         )
-
-        # Make the whole list safely fit inside the frame
-        questions.scale(0.88)
 
         questions.next_to(
             question,
             DOWN,
-            buff=0.30
+            buff=0.18
         )
 
-        # Move slightly upward to avoid touching the bottom edge
-        questions.shift(UP * 0.15)
+        # Slight upward adjustment for subtitle-safe composition.
+        questions.shift(
+            UP * 0.10
+        )
 
         self.play(
             LaggedStart(

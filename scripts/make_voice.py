@@ -14,9 +14,29 @@ OUTPUT_DIR = "voice"
 
 VOICE = "en-US-GuyNeural"
 
-RATE = "+0%"
+DEFAULT_RATE = "+0%"
 VOLUME = "+0%"
 PITCH = "+0Hz"
+
+
+# ============================================================
+# PER-SCENE VOICE RATE
+# ============================================================
+
+# Adjust only scenes whose actual MP3 duration is longer
+# than the corresponding rendered animation.
+
+SCENE_RATES = {
+    3: "+7%",
+    5: "+6%",
+    8: "+8%",
+    10: "+8%",
+    15: "+17%",
+    16: "+14%",
+    17: "+12%",
+    18: "+15%",
+    19: "+20%",
+}
 
 
 # ============================================================
@@ -24,6 +44,7 @@ PITCH = "+0Hz"
 # ============================================================
 
 def parse_narration(text):
+
     pattern = re.compile(
         r"\[SCENE\s+(\d+)\]\s*(.*?)(?=\[SCENE\s+\d+\]|\Z)",
         re.DOTALL
@@ -34,7 +55,9 @@ def parse_narration(text):
     scenes = {}
 
     for number, body in matches:
+
         number = int(number)
+
         body = re.sub(
             r"\s+",
             " ",
@@ -60,15 +83,21 @@ async def generate_scene(
         f"scene{scene_number:02d}.mp3"
     )
 
+    rate = SCENE_RATES.get(
+        scene_number,
+        DEFAULT_RATE
+    )
+
     print(
         f"[{scene_number:02d}/24] "
-        f"Generating {output_file}..."
+        f"Generating {output_file} "
+        f"(rate={rate})..."
     )
 
     communicate = edge_tts.Communicate(
         text=text,
         voice=VOICE,
-        rate=RATE,
+        rate=rate,
         volume=VOLUME,
         pitch=PITCH,
     )
@@ -91,6 +120,7 @@ async def main():
     if not os.path.exists(
         NARRATION_FILE
     ):
+
         raise FileNotFoundError(
             f"Cannot find {NARRATION_FILE}"
         )
@@ -122,11 +152,26 @@ async def main():
             "Expected exactly 24 scenes."
         )
 
-    # --------------------------------------------------------
-    # Generate sequentially.
-    # This is slower than parallel generation,
-    # but easier to debug.
-    # --------------------------------------------------------
+    print()
+    print("=" * 60)
+    print("VOICE RATE SETTINGS")
+    print("=" * 60)
+
+    for scene_number in range(1, 25):
+
+        rate = SCENE_RATES.get(
+            scene_number,
+            DEFAULT_RATE
+        )
+
+        print(
+            f"Scene {scene_number:02d}: {rate}"
+        )
+
+    print()
+    print("=" * 60)
+    print("GENERATING 24 VOICE FILES")
+    print("=" * 60)
 
     for scene_number in range(
         1,
